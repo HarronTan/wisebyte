@@ -18,12 +18,13 @@ interface Categories {
   target_amt:number;
   current_amt:number;
   bkg_color:string;
+  tags: string[];
 }
 
 // Define multiple tables (object stores) and their indexes
 db.version(1).stores({
   transactions: '++id, category, desc, amount, date_time', 
-  categories: '++id, &name, target_amt, current_amt, bkg_color'
+  categories: '++id, &name, target_amt, current_amt, bkg_color, tags'
 });
 
 export async function getTransactionWithinMonth(selectedDate: Date): Promise<Transactions[]> {

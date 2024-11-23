@@ -29,21 +29,24 @@ function App() {
               [
                 {
                   name: "food",
-                  target_amt: 0,
+                  target_amt: 300,
                   current_amt: 0,
                   bkg_color: "#2D3047",
+                  tags: ["Breakfast", "Lunch", "Dinner"],
                 },
                 {
                   name: "transport",
-                  target_amt: 0,
+                  target_amt: 100,
                   current_amt: 0,
                   bkg_color: "#38726C",
+                  tags: ["Bus", "Cab", "train"],
                 },
                 {
                   name: "leisure",
-                  target_amt: 0,
+                  target_amt: 200,
                   current_amt: 0,
                   bkg_color: "#B9314F",
+                  tags: [],
                 },
               ],
               { allKeys: true }

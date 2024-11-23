@@ -156,12 +156,17 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   const handleSubmit = async () => {
     const newTransaction: Omit<Transactions, "id"> = {
       category: category.toLowerCase(),
-      desc: desc ?? category.toLowerCase(),
+      desc: desc !== "" ? desc : category.toLowerCase(),
       amount: Number(input),
       date_time: new Date(),
     };
-
+    const cat = await db
+      .table("categories")
+      .get({ name: category.toLowerCase() });
     await db.table("transactions").add(newTransaction);
+    await db
+      .table("categories")
+      .update(cat.id, { current_amt: cat.current_amt + Number(input) });
     setInput("");
     setIsOpen(false);
   };
@@ -172,15 +177,24 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     setColor(color);
   };
 
-  function getCatgegories(category: string) {
+  function getCatgegories(category: string, size: string) {
     switch (category) {
       case "food":
-        return <IonIcon icon={Icons.fastFoodOutline} />;
+        return <IonIcon icon={Icons.fastFoodOutline} size={size} />;
       case "leisure":
-        return <IonIcon icon={Icons.gameControllerOutline} />;
+        return <IonIcon icon={Icons.gameControllerOutline} size={size} />;
       case "transport":
-        return <IonIcon icon={Icons.busOutline} />;
+        return <IonIcon icon={Icons.busOutline} size={size} />;
     }
+  }
+
+  function getProgressFillStyle(cat: Categories): string {
+    const percentage = cat.current_amt / cat.target_amt;
+
+    const color =
+      percentage > 0.9 ? "#FF0042" : percentage > 0.7 ? "#FFBD00" : "#00FFBD";
+
+    return `conic-gradient(${color},${percentage * 360}deg,#edededb1 0deg)`;
   }
 
   return (
@@ -209,17 +223,19 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                 </div>
                 {recs[1].map((rec) => (
                   <div className="card-content" key={rec.id}>
-                    <div>
+                    <div style={{ alignItems: "center" }}>
                       <span
                         style={{
                           color: categories?.find(
                             (cat) => cat.name === rec.category
                           )?.bkg_color,
+                          display: "flex",
+                          alignItems: "center",
                         }}
                       >
-                        {getCatgegories(rec.category)}
+                        {getCatgegories(rec.category, "large")}
                       </span>
-                      <span>{rec.desc}</span>
+                      <span style={{ textAlign: "left" }}>{rec.desc}</span>
                       <span style={{ justifySelf: "self-end" }}>
                         ${rec.amount}
                       </span>
@@ -281,15 +297,20 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                 </div>
                 <div className="progress-container">
                   <div className="progress-circle">
-                    <div className="progress-mask primaryTwo">
+                    <div className="progress-mask">
                       <div
                         className="category-icon"
                         style={{ backgroundColor: cat.bkg_color }}
                       >
-                        {getCatgegories(cat.name)}
+                        {getCatgegories(cat.name, "medium")}
                       </div>
                     </div>
-                    <div className="progress-fill"></div>
+                    <div
+                      className="progress-fill"
+                      style={{
+                        background: getProgressFillStyle(cat),
+                      }}
+                    ></div>
                   </div>
                 </div>
                 <div>${cat.current_amt}</div>
@@ -339,12 +360,17 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                   className="desc-input"
                 ></input>
                 <div className="modal-desc-tag">
-                  <div className="tag">Breakfast</div>
-                  <div className="tag">Lunch</div>
-                  <div className="tag">Dinner</div>
-                  <div className="tag">Breakfast</div>
-                  <div className="tag">Lunch</div>
-                  <div className="tag">Dinner</div>
+                  {categories
+                    ?.find((cat) => cat.name === category)
+                    ?.tags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="tag"
+                        onClick={() => setDesc(tag)}
+                      >
+                        {tag}
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
