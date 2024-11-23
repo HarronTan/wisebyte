@@ -4,24 +4,22 @@ import { IonIcon } from "@ionic/react";
 import * as Icons from "ionicons/icons";
 import db, { Categories, getTransactionWithinMonth, Transactions } from "../db";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useSwipeable } from "react-swipeable";
 
 const TransactionContainer = ({ date }: { date: Date }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCat] = useState("");
   const descRef = useRef<HTMLInputElement>(null);
   const [catColor, setColor] = useState("");
-  const [dayInput, setDayInput] = useState(new Date().getDate());
-  const [mayRecords, setMayRecords] = useState([]);
-  const [currRec, setCurrRec] = useState<any[]>([]);
+  const [dayInput, setDayInput] = useState("");
   const [ops, setOps] = useState("");
   const [input, setInput] = useState("");
-  const [mthRecStoreField, setMonth] = useState("");
-  const [totalExpense, setTotalExpense] = useState(0);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [desc, setDesc] = useState("");
   const [displayRec, setDisplayRec] = useState<
     [string, Transactions[]][] | null
   >(null);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [editingRec, setEditingRec] = useState<Transactions | null>(null);
 
   //new variable
   const [isCatOpen, setCatOpen] = useState(true);
@@ -44,20 +42,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
       });
       setDisplayRec(Array.from(displayRecs));
     });
-  }, [date, isOpen]);
-
-  const addExpense = (day: any, expense: any) => {
-    const index = currRec.findIndex((item) => item.hasOwnProperty(day));
-    if (index !== -1) {
-      const updatedRec = [...currRec];
-      updatedRec[index][day].push(expense);
-      updatedRec[index].total += expense.amount;
-      setCurrRec(updatedRec);
-    } else {
-      const newDay = { [day]: [expense], total: expense.amount };
-      setCurrRec([...currRec, newDay]);
-    }
-  };
+  }, [date, isOpen, isEditModalOpen]);
 
   const handleButtonClick = async (value: any) => {
     if (value === "backsapce") {
@@ -197,6 +182,178 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     return `conic-gradient(${color},${percentage * 360}deg,#edededb1 0deg)`;
   }
 
+  const handleDelete = (rec: Transactions) => {
+    setEditingRec(rec);
+    setEditModalOpen(true);
+  };
+
+  const SwipeableItem = ({
+    rec,
+    onDelete,
+  }: {
+    rec: Transactions;
+    onDelete: (rec: Transactions) => void;
+  }) => {
+    const [position, setPosition] = useState(0); // Tracks the swipe position
+    const [isSwiping, setIsSwiping] = useState(false); // Tracks if the user is actively swiping
+
+    const handlers = useSwipeable({
+      onSwiping: (eventData) => {
+        setIsSwiping(true);
+        setPosition(eventData.deltaX); // Update position based on swipe distance
+      },
+      onSwiped: (eventData) => {
+        setIsSwiping(false);
+        if (eventData.deltaX < -60) {
+          // Trigger delete if swiped far enough
+          onDelete(rec);
+        }
+        setPosition(0); // Reset position after swipe
+      },
+      preventScrollOnSwipe: true,
+      trackMouse: true, // Optional: Enables swipe detection with a mouse
+    });
+
+    return (
+      <div
+        {...handlers}
+        className="card-content"
+        style={{
+          transform: `translateX(${
+            position < -75 ? -75 : position > 0 ? 0 : position
+          }px)`,
+          transition: isSwiping ? "none" : "transform 0.3s ease-out",
+        }}
+      >
+        <div style={{ alignItems: "center" }}>
+          <span
+            style={{
+              color: categories?.find((cat) => cat.name === rec.category)
+                ?.bkg_color,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            {getCatgegories(rec.category, "large")}
+          </span>
+          <span style={{ textAlign: "left" }}>{rec.desc}</span>
+          <span style={{ justifySelf: "self-end" }}>${rec.amount}</span>
+        </div>
+      </div>
+    );
+  };
+
+  async function deleteRecHandler(rec: Transactions) {
+    const cat = categories!.find((cat) => cat.name === rec.category);
+    await db.table("transactions").delete(rec.id);
+    await db
+      .table("categories")
+      .update(cat!.id, { current_amt: cat!.current_amt - Number(rec.amount) });
+    setEditModalOpen(false);
+  }
+
+  function EditModal({ rec }: { rec: Transactions }) {
+    const { amount, desc, date_time, category } = rec;
+    const catColor = categories?.find(
+      (cat) => cat.name === category
+    )?.bkg_color;
+    return (
+      <>
+        <div className="modal-backdrop"></div>
+        <div
+          className="modal-container"
+          style={{ height: "45%", justifyContent: "space-between" }}
+        >
+          <div className="modal-header-custom">
+            <div style={{ width: 24 }}></div>
+            <h3 style={{ backgroundColor: catColor }}>
+              {category.replace(
+                category.charAt(0),
+                category.charAt(0).toUpperCase()
+              )}
+            </h3>
+            <button
+              className="btn-close"
+              onClick={() => setEditModalOpen(false)}
+            ></button>
+          </div>
+          <div className="modal-amount" style={{ height: "unset" }}>
+            Amount
+          </div>
+          <div
+            style={{
+              fontSize: "2rem",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontStyle: "oblique",
+              padding: "0 40px",
+              background: "#D9D9D9",
+              borderRadius: "40px",
+              alignSelf: "center",
+            }}
+          >
+            ${amount}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexFlow: "row",
+              padding: "0 12%",
+              justifyContent: "space-between",
+            }}
+          >
+            <div className="info">Date</div>
+            <div>{date_time.toDateString()}</div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexFlow: "row",
+              padding: "0 12%",
+              justifyContent: "space-between",
+            }}
+          >
+            <div className="info">Description</div>
+            <div>{desc}</div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              className="category-icon"
+              style={{ backgroundColor: "#FF0042", padding: "10px" }}
+              onClick={() => deleteRecHandler(rec)}
+            >
+              <IonIcon icon={Icons.trashBinOutline} size="large" />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  function formatDate(input: string): string {
+    // Parse the input string into a Date object
+    const date = new Date(input);
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      throw new Error("Invalid date string");
+    }
+
+    // Extract the desired components
+    const dayOfWeek = date.toLocaleString("en-US", { weekday: "short" }); // e.g., "Sat"
+    const month = date.toLocaleString("en-US", { month: "short" }); // e.g., "Nov"
+    const day = date.getDate(); // e.g., 23
+
+    // Return the formatted string
+    return `${month} ${day}, ${dayOfWeek}`;
+  }
+
   return (
     <div className="container ">
       {/* Toolbar for Total Expenses */}
@@ -216,50 +373,22 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                 }}
               >
                 <div className="card-header">
-                  <p>{recs[0]}</p>
-                  <p>
+                  <p>{formatDate(recs[0])}</p>
+                  <p style={{ paddingRight: "20px" }}>
                     ${recs[1].reduce((prev, curr) => prev + curr.amount, 0)}
                   </p>
                 </div>
                 {recs[1].map((rec) => (
-                  <div className="card-content" key={rec.id}>
-                    <div style={{ alignItems: "center" }}>
-                      <span
-                        style={{
-                          color: categories?.find(
-                            (cat) => cat.name === rec.category
-                          )?.bkg_color,
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        {getCatgegories(rec.category, "large")}
-                      </span>
-                      <span style={{ textAlign: "left" }}>{rec.desc}</span>
-                      <span style={{ justifySelf: "self-end" }}>
-                        ${rec.amount}
-                      </span>
-                    </div>
-                  </div>
+                  <SwipeableItem
+                    key={rec.id}
+                    rec={rec}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             ))
           : "No transactions yet.."
         : "No transactions yet.."}
-
-      {/* <div>
-        <div className="card-header">
-          <p>May 5</p>
-          <p>Total: $100</p>
-        </div>
-        <div className="card-content">
-          <div className="d-flex justify-content-between">
-            <span>{getCatgegories("food")}</span>
-            <span>{"Lunch"}</span>
-            <span>${100}</span>
-          </div>
-        </div>
-      </div> */}
 
       {/* Category Buttons */}
       {!isCatOpen && (
@@ -482,6 +611,12 @@ const TransactionContainer = ({ date }: { date: Date }) => {
             </div>
           </div>
         </>
+      )}
+
+      {isEditModalOpen && editingRec != null ? (
+        <EditModal rec={editingRec} />
+      ) : (
+        <></>
       )}
     </div>
   );
