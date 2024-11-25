@@ -9,9 +9,7 @@ import { useSwipeable } from "react-swipeable";
 const TransactionContainer = ({ date }: { date: Date }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCat] = useState("");
-  const descRef = useRef<HTMLInputElement>(null);
   const [catColor, setColor] = useState("");
-  const [dayInput, setDayInput] = useState("");
   const [ops, setOps] = useState("");
   const [input, setInput] = useState("");
   const [desc, setDesc] = useState("");
@@ -138,10 +136,33 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     setOps("");
   };
 
+  const clearInputs = () => {
+    setInput("");
+    setCat("");
+    setColor("");
+    setDesc("");
+  };
+
   const handleSubmit = async () => {
+    if (editingRec != null) {
+      editingRec.amount = Number(input);
+      editingRec.category = category.toLowerCase();
+      editingRec.desc = desc !== "" ? desc : category;
+      await db
+        .table("transactions")
+        .where({ id: editingRec.id })
+        .modify((rec) => {
+          rec.amount = Number(input);
+          rec.category = category.toLowerCase();
+          rec.desc = desc !== "" ? desc : category;
+        });
+      clearInputs();
+      setIsOpen(false);
+      return;
+    }
     const newTransaction: Omit<Transactions, "id"> = {
       category: category.toLowerCase(),
-      desc: desc !== "" ? desc : category.toLowerCase(),
+      desc: desc !== "" ? desc : category,
       amount: Number(input),
       date_time: new Date(),
     };
@@ -292,6 +313,15 @@ const TransactionContainer = ({ date }: { date: Date }) => {
               borderRadius: "40px",
               alignSelf: "center",
             }}
+            onClick={() => {
+              if (catColor == null) return;
+              setEditModalOpen(false);
+              setInput(amount.toString());
+              setCat(category);
+              setColor(catColor);
+              setDesc(desc);
+              setIsOpen(true);
+            }}
           >
             ${amount}
           </div>
@@ -347,11 +377,10 @@ const TransactionContainer = ({ date }: { date: Date }) => {
 
     // Extract the desired components
     const dayOfWeek = date.toLocaleString("en-US", { weekday: "short" }); // e.g., "Sat"
-    const month = date.toLocaleString("en-US", { month: "short" }); // e.g., "Nov"
     const day = date.getDate(); // e.g., 23
 
     // Return the formatted string
-    return `${month} ${day}, ${dayOfWeek}`;
+    return `${day}, ${dayOfWeek}`;
   }
 
   return (
