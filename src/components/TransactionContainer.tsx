@@ -18,7 +18,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   >(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [editingRec, setEditingRec] = useState<Transactions | null>(null);
-
+  const [totalTransactionAmt, setTotalTransactionAmt] = useState("0");
   //new variable
   const [isCatOpen, setCatOpen] = useState(true);
 
@@ -29,6 +29,10 @@ const TransactionContainer = ({ date }: { date: Date }) => {
 
   useEffect(() => {
     getTransactionWithinMonth(date).then((recs) => {
+      const total = recs
+        .reduce((prev, curr) => prev + curr.amount, 0)
+        .toFixed(2);
+      setTotalTransactionAmt(total);
       const displayRecs: Map<string, Transactions[]> = new Map();
       recs.forEach((rec) => {
         if (displayRecs.get(rec.date_time.toDateString()) == null) {
@@ -219,9 +223,9 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     const [isSwiping, setIsSwiping] = useState(false); // Tracks if the user is actively swiping
 
     const handlers = useSwipeable({
-      onSwiping: (eventData) => {
+      onSwiping: ({ deltaX, deltaY }) => {
         setIsSwiping(true);
-        setPosition(eventData.deltaX); // Update position based on swipe distance
+        if (Math.abs(deltaY) < Math.abs(deltaX)) setPosition(deltaX); // Update position based on swipe distance
       },
       onSwiped: (eventData) => {
         setIsSwiping(false);
@@ -231,7 +235,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
         }
         setPosition(0); // Reset position after swipe
       },
-      preventScrollOnSwipe: true,
+      preventScrollOnSwipe: false,
       trackMouse: true, // Optional: Enables swipe detection with a mouse
     });
 
@@ -270,6 +274,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     await db
       .table("categories")
       .update(cat!.id, { current_amt: cat!.current_amt - Number(rec.amount) });
+    setEditingRec(null);
     setEditModalOpen(false);
   }
 
@@ -386,7 +391,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   return (
     <div className="container ">
       {/* Toolbar for Total Expenses */}
-      <h4>Transactions</h4>
+      <h4>Total: ${totalTransactionAmt}</h4>
 
       {/* Display records */}
       {displayRec != null
@@ -423,13 +428,26 @@ const TransactionContainer = ({ date }: { date: Date }) => {
       {!isCatOpen && (
         <div
           className="floating-container-close"
-          onClick={() => setCatOpen(true)}
+          onClick={() => {
+            setCatOpen(true);
+          }}
         >
           <IonIcon icon={Icons.addOutline} />
         </div>
       )}
       {isCatOpen && (
-        <div className="floating-container">
+        <div
+          className="floating-container"
+          style={{
+            position:
+              displayRec != null
+                ? displayRec.reduce((prev, curr) => prev + curr[1].length, 0) >
+                  3
+                  ? "sticky"
+                  : "absolute"
+                : "absolute",
+          }}
+        >
           <div className="flt-container-header">
             <h4 style={{ textAlign: "left", color: "#183A55" }}>Categories</h4>
             <div className="close-button" onClick={() => setCatOpen(false)}>
@@ -471,7 +489,16 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                     ></div>
                   </div>
                 </div>
-                <div>${cat.current_amt}</div>
+                <div
+                  style={{
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    padding: "0 4%",
+                  }}
+                >
+                  ${cat.current_amt.toFixed(2)}
+                </div>
               </div>
             ))}
           </div>

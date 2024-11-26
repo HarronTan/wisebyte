@@ -40,10 +40,22 @@ const Tab1 = () => {
             <FaChevronLeft
               onClick={() => changeDate("back")}
               aria-label="backDate"
+              color="rgb(24, 58, 85)"
             />
 
             {/* Date Selector Button */}
-            <button className="btn btn-primary" onClick={toggleModal}>
+            <button
+              style={{
+                backgroundColor: "#D6F4FF",
+                borderRadius: "30px",
+                color: "#183A55",
+                boxShadow: "2px 2px 10px 0px rgba(0,0,0,0.1)",
+                border: "none",
+                padding: "2% 5%",
+                fontWeight: "600",
+              }}
+              onClick={toggleModal}
+            >
               {dateField.toLocaleString("default", {
                 month: "long",
                 year: "numeric",
@@ -54,6 +66,7 @@ const Tab1 = () => {
             <FaChevronRight
               onClick={() => changeDate("forward")}
               aria-label="forwardDate"
+              color="rgb(24, 58, 85)"
             />
           </div>
         </div>
