@@ -2,9 +2,16 @@ import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import "./transactionContainer.css";
 import { IonIcon } from "@ionic/react";
 import * as Icons from "ionicons/icons";
-import db, { Categories, getTransactionWithinMonth, Transactions } from "../db";
+import db, {
+  Categories,
+  getTotalTransactionAmountByCategoryWithinMonth,
+  getTransactionWithinMonth,
+  Transactions,
+  CategoryTotal,
+} from "../db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useSwipeable } from "react-swipeable";
+import { motion } from "framer-motion";
 
 const TransactionContainer = ({ date }: { date: Date }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +28,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   const [totalTransactionAmt, setTotalTransactionAmt] = useState("0");
   //new variable
   const [isCatOpen, setCatOpen] = useState(true);
+  const [catAmount, setCatAmount] = useState<Record<string, CategoryTotal>>();
 
   const categories: Categories[] | undefined = useLiveQuery(
     () => db.table("categories").toArray(), // Dexie query: fetch all users
@@ -32,6 +40,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
       const total = recs
         .reduce((prev, curr) => prev + curr.amount, 0)
         .toFixed(2);
+
       setTotalTransactionAmt(total);
       const displayRecs: Map<string, Transactions[]> = new Map();
       recs.forEach((rec) => {
@@ -43,6 +52,9 @@ const TransactionContainer = ({ date }: { date: Date }) => {
         }
       });
       setDisplayRec(Array.from(displayRecs));
+    });
+    getTotalTransactionAmountByCategoryWithinMonth(date).then((result) => {
+      setCatAmount(result);
     });
   }, [date, isOpen, isEditModalOpen]);
 
@@ -177,7 +189,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     await db
       .table("categories")
       .update(cat.id, { current_amt: cat.current_amt + Number(input) });
-    setInput("");
+    clearInputs();
     setIsOpen(false);
   };
 
@@ -199,7 +211,12 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   }
 
   function getProgressFillStyle(cat: Categories): string {
-    const percentage = cat.current_amt / cat.target_amt;
+    const curr_amt = catAmount
+      ? catAmount[cat.name]
+        ? catAmount[cat.name].totalAmount
+        : 0
+      : 0;
+    const percentage = curr_amt / cat.target_amt;
 
     const color =
       percentage > 0.9 ? "#FF0042" : percentage > 0.7 ? "#FFBD00" : "#00FFBD";
@@ -262,7 +279,9 @@ const TransactionContainer = ({ date }: { date: Date }) => {
             {getCatgegories(rec.category, "large")}
           </span>
           <span style={{ textAlign: "left" }}>{rec.desc}</span>
-          <span style={{ justifySelf: "self-end" }}>${rec.amount}</span>
+          <span style={{ justifySelf: "self-end" }}>
+            ${rec.amount.toFixed(2)}
+          </span>
         </div>
       </div>
     );
@@ -271,9 +290,6 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   async function deleteRecHandler(rec: Transactions) {
     const cat = categories!.find((cat) => cat.name === rec.category);
     await db.table("transactions").delete(rec.id);
-    await db
-      .table("categories")
-      .update(cat!.id, { current_amt: cat!.current_amt - Number(rec.amount) });
     setEditingRec(null);
     setEditModalOpen(false);
   }
@@ -298,10 +314,13 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                 category.charAt(0).toUpperCase()
               )}
             </h3>
-            <button
-              className="btn-close"
-              onClick={() => setEditModalOpen(false)}
-            ></button>
+
+            <motion.div whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.8 }}>
+              <button
+                className="btn-close"
+                onClick={() => setEditModalOpen(false)}
+              ></button>
+            </motion.div>
           </div>
           <div className="modal-amount" style={{ height: "unset" }}>
             Amount
@@ -409,7 +428,10 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                 <div className="card-header">
                   <p>{formatDate(recs[0])}</p>
                   <p style={{ paddingRight: "20px" }}>
-                    ${recs[1].reduce((prev, curr) => prev + curr.amount, 0)}
+                    $
+                    {recs[1]
+                      .reduce((prev, curr) => prev + curr.amount, 0)
+                      .toFixed(2)}
                   </p>
                 </div>
                 {recs[1].map((rec) => (
@@ -426,14 +448,20 @@ const TransactionContainer = ({ date }: { date: Date }) => {
 
       {/* Category Buttons */}
       {!isCatOpen && (
-        <div
+        <motion.div
           className="floating-container-close"
-          onClick={() => {
-            setCatOpen(true);
-          }}
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.8 }}
         >
-          <IonIcon icon={Icons.addOutline} />
-        </div>
+          <div
+            style={{ display: "flex" }}
+            onClick={() => {
+              setCatOpen(true);
+            }}
+          >
+            <IonIcon icon={Icons.addOutline} />
+          </div>
+        </motion.div>
       )}
       {isCatOpen && (
         <div
@@ -450,9 +478,18 @@ const TransactionContainer = ({ date }: { date: Date }) => {
         >
           <div className="flt-container-header">
             <h4 style={{ textAlign: "left", color: "#183A55" }}>Categories</h4>
-            <div className="close-button" onClick={() => setCatOpen(false)}>
-              <IonIcon icon={Icons.removeOutline} />
-            </div>
+            <motion.div
+              className="close-button"
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.8 }}
+            >
+              <div
+                style={{ display: "flex" }}
+                onClick={() => setCatOpen(false)}
+              >
+                <IonIcon icon={Icons.removeOutline} />
+              </div>
+            </motion.div>
           </div>
           <div className="d-flex justify-content-around">
             {categories?.map((cat) => (
@@ -497,7 +534,12 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                     padding: "0 4%",
                   }}
                 >
-                  ${cat.current_amt.toFixed(2)}
+                  $
+                  {catAmount
+                    ? catAmount[cat.name]
+                      ? catAmount[cat.name].totalAmount.toFixed(2)
+                      : 0
+                    : 0}
                 </div>
               </div>
             ))}
@@ -520,7 +562,10 @@ const TransactionContainer = ({ date }: { date: Date }) => {
               </h3>
               <button
                 className="btn-close"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  clearInputs();
+                }}
               ></button>
             </div>
             <div className="modal-amount">
