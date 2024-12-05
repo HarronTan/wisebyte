@@ -278,7 +278,19 @@ const TransactionContainer = ({ date }: { date: Date }) => {
           >
             {getCatgegories(rec.category, "large")}
           </span>
-          <span style={{ textAlign: "left" }}>{rec.desc}</span>
+          <div
+            style={{
+              textAlign: "left",
+              display: "flex",
+              flexFlow: "column",
+              lineHeight: "1rem",
+            }}
+          >
+            {rec.desc}
+            <div style={{ color: "rgb(152 145 145)", fontSize: "0.8rem" }}>
+              {formatDateToTime(rec.date_time)}
+            </div>
+          </div>
           <span style={{ justifySelf: "self-end" }}>
             ${rec.amount.toFixed(2)}
           </span>
@@ -388,6 +400,18 @@ const TransactionContainer = ({ date }: { date: Date }) => {
         </div>
       </>
     );
+  }
+
+  function formatDateToTime(date: Date) {
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    const ampm = hours >= 12 ? "pm" : "am";
+
+    // Convert 24-hour format to 12-hour format
+    hours = hours % 12 || 12; // Adjust 0 to 12 for midnight/noon
+    const newMinutes = minutes < 10 ? "0" + minutes : minutes; // Add leading zero to minutes if necessary
+
+    return `${hours}:${newMinutes}${ampm}`;
   }
 
   function formatDate(input: string): string {
