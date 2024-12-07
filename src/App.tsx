@@ -56,8 +56,21 @@ function App() {
     };
 
     fetchCategories();
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        navigator.serviceWorker.addEventListener("message", (event) => {
+          if (event.data?.type === "CACHE_UPDATED") {
+            showNotification("Content has been cached for offline use!");
+          }
+        });
+      });
+    }
   }, []);
 
+  const showNotification = (message: string) => {
+    // Customize this function to display a toast notification
+    alert(message); // Replace with a better UI, e.g., a toast
+  };
   if (!isMobileDevice())
     return (
       <div className="mobile-only-container">

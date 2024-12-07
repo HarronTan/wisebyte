@@ -632,29 +632,40 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                 >
                   {formatDateFieldDisplay(dateField ? dateField : new Date())}
                 </div>
-                <IonIcon icon={Icons.calendar}></IonIcon>
-                <input
-                  type="date"
+                <div
                   style={{
-                    width: "20px",
-                    border: "none",
-                    maxHeight: "24px",
-                    opacity: 0,
+                    position: "relative",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
-                  value={formatDateField(dateField ? dateField : new Date())}
-                  onChange={(event) => {
-                    const selectedDate = new Date(event.target.value);
-                    const now = new Date(); // Current date and time
-                    // Set the time of the selected date to the current time
-                    selectedDate.setHours(
-                      now.getHours(),
-                      now.getMinutes(),
-                      now.getSeconds(),
-                      now.getMilliseconds()
-                    );
-                    setDateField(selectedDate);
-                  }}
-                />
+                >
+                  <IonIcon icon={Icons.calendar}></IonIcon>
+                  <input
+                    type="date"
+                    style={{
+                      width: "20px",
+                      border: "none",
+                      maxHeight: "24px",
+                      opacity: 0,
+                      position: "absolute",
+                      left: 0,
+                    }}
+                    value={formatDateField(dateField ? dateField : new Date())}
+                    onChange={(event) => {
+                      const selectedDate = new Date(event.target.value);
+                      const now = new Date(); // Current date and time
+                      // Set the time of the selected date to the current time
+                      selectedDate.setHours(
+                        now.getHours(),
+                        now.getMinutes(),
+                        now.getSeconds(),
+                        now.getMilliseconds()
+                      );
+                      setDateField(selectedDate);
+                    }}
+                  />
+                </div>
               </div>
               <h3 style={{ backgroundColor: catColor, margin: 0 }}>
                 {category.replace(

@@ -78,3 +78,17 @@ self.addEventListener('message', (event) => {
 });
 
 // Any other custom service worker logic can go here.
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('your-cache-name').then((cache) => {
+      return cache.addAll(['/']); // List of files to cache
+    })
+  );
+
+  // Notify the client that content is cached
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ type: 'CACHE_UPDATED' });
+    });
+  });
+});
