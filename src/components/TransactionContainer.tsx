@@ -623,12 +623,24 @@ const TransactionContainer = ({ date }: { date: Date }) => {
                   alignItems: "center",
                 }}
               >
-                <div style={{ fontSize: "small", color: "#808080" }}>
+                <div
+                  style={{
+                    fontSize: "small",
+                    color: "#808080",
+                    paddingRight: "4px",
+                  }}
+                >
                   {formatDateFieldDisplay(dateField ? dateField : new Date())}
                 </div>
+                <IonIcon icon={Icons.calendar}></IonIcon>
                 <input
                   type="date"
-                  style={{ width: "18px", border: "none" }}
+                  style={{
+                    width: "20px",
+                    border: "none",
+                    maxHeight: "24px",
+                    opacity: 0,
+                  }}
                   value={formatDateField(dateField ? dateField : new Date())}
                   onChange={(event) => {
                     const selectedDate = new Date(event.target.value);
