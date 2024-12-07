@@ -194,6 +194,7 @@ h4 {
     display: flex;
     width: 100%;
     justify-content: space-between;
+    align-items: center;
     h3 {
         color:white;
         padding:0 25px;
@@ -265,4 +266,22 @@ h4 {
 
 .info{
   color: #818181;
+}
+
+.datePicker{
+  text-align: center;
+  width:25%;
+  display: none;
+  position:relative;
+  left:10%;
+}
+
+.react-datepicker-popper{
+  top:10%!important;
+  left:5%!important;
+  transform: none!important;
+}
+
+.react-datepicker__triangle{
+  display: none;
 }

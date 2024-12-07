@@ -23,12 +23,14 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   const [displayRec, setDisplayRec] = useState<
     [string, Transactions[]][] | null
   >(null);
+  const [dateField, setDateField] = useState<Date | null>(new Date());
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [editingRec, setEditingRec] = useState<Transactions | null>(null);
   const [totalTransactionAmt, setTotalTransactionAmt] = useState("0");
   //new variable
   const [isCatOpen, setCatOpen] = useState(true);
   const [catAmount, setCatAmount] = useState<Record<string, CategoryTotal>>();
+  const datePicker = useRef<any>();
 
   const categories: Categories[] | undefined = useLiveQuery(
     () => db.table("categories").toArray(), // Dexie query: fetch all users
@@ -160,10 +162,18 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   };
 
   const handleSubmit = async () => {
+    const date_time = dateField ? dateField : new Date();
     if (editingRec != null) {
       editingRec.amount = Number(input);
       editingRec.category = category.toLowerCase();
       editingRec.desc = desc !== "" ? desc : category;
+      const oldDate = new Date(editingRec.date_time);
+      const newDate = new Date(date_time);
+      newDate.setHours(oldDate.getHours());
+      newDate.setMinutes(oldDate.getMinutes());
+      newDate.setSeconds(oldDate.getSeconds());
+      newDate.setMilliseconds(oldDate.getMilliseconds());
+      editingRec.date_time = new Date(newDate);
       await db
         .table("transactions")
         .where({ id: editingRec.id })
@@ -171,6 +181,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
           rec.amount = Number(input);
           rec.category = category.toLowerCase();
           rec.desc = desc !== "" ? desc : category;
+          rec.date_time = editingRec.date_time;
         });
       clearInputs();
       setIsOpen(false);
@@ -180,7 +191,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
       category: category.toLowerCase(),
       desc: desc !== "" ? desc : category,
       amount: Number(input),
-      date_time: new Date(),
+      date_time: date_time,
     };
     const cat = await db
       .table("categories")
@@ -356,6 +367,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
               setCat(category);
               setColor(catColor);
               setDesc(desc);
+              setDateField(date_time);
               setIsOpen(true);
             }}
           >
@@ -370,7 +382,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
             }}
           >
             <div className="info">Date</div>
-            <div>{date_time.toDateString()}</div>
+            <div>{formatDateFieldFullDisplay(date_time)}</div>
           </div>
           <div
             style={{
@@ -430,6 +442,32 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     // Return the formatted string
     return `${day}, ${dayOfWeek}`;
   }
+
+  const formatDateField = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+    const year = date.getFullYear();
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDateFieldDisplay = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+    const year = String(date.getFullYear()).slice(2, 4);
+    return `${day}-${month}-${year}`;
+  };
+
+  const formatDateFieldFullDisplay = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    };
+    return new Intl.DateTimeFormat("en-US", options).format(date);
+  };
 
   return (
     <div className="container ">
@@ -577,20 +615,56 @@ const TransactionContainer = ({ date }: { date: Date }) => {
           <div className="modal-backdrop"></div>
           <div className="modal-container">
             <div className="modal-header-custom">
-              <div style={{ width: 24 }}></div>
-              <h3 style={{ backgroundColor: catColor }}>
+              <div
+                style={{
+                  width: "100%",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ fontSize: "small", color: "#808080" }}>
+                  {formatDateFieldDisplay(dateField ? dateField : new Date())}
+                </div>
+                <input
+                  type="date"
+                  style={{ width: "18px", border: "none" }}
+                  value={formatDateField(dateField ? dateField : new Date())}
+                  onChange={(event) => {
+                    const selectedDate = new Date(event.target.value);
+                    const now = new Date(); // Current date and time
+                    // Set the time of the selected date to the current time
+                    selectedDate.setHours(
+                      now.getHours(),
+                      now.getMinutes(),
+                      now.getSeconds(),
+                      now.getMilliseconds()
+                    );
+                    setDateField(selectedDate);
+                  }}
+                />
+              </div>
+              <h3 style={{ backgroundColor: catColor, margin: 0 }}>
                 {category.replace(
                   category.charAt(0),
                   category.charAt(0).toUpperCase()
                 )}
               </h3>
-              <button
-                className="btn-close"
-                onClick={() => {
-                  setIsOpen(false);
-                  clearInputs();
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "end",
+                  width: "100%",
                 }}
-              ></button>
+              >
+                <button
+                  className="btn-close"
+                  onClick={() => {
+                    setIsOpen(false);
+                    clearInputs();
+                  }}
+                ></button>
+              </div>
             </div>
             <div className="modal-amount">
               Amount
