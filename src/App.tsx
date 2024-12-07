@@ -16,7 +16,8 @@ import Tab3 from "./pages/Tab3";
 
 import db from "./db";
 import { useEffect } from "react";
-
+import { IonIcon } from "@ionic/react";
+import * as Icons from "ionicons/icons";
 function App() {
   useEffect(() => {
     const fetchCategories = async () => {
@@ -104,22 +105,28 @@ function App() {
             to="/"
             className={({ isActive }) => (isActive ? "active-tab" : "")}
           >
-            <FaHome />
+            <div className="Icon-container">
+              <IonIcon icon={Icons.home} />
+            </div>
             <span>Home</span>
           </NavLink>
           <NavLink
             to="/tab2"
             className={({ isActive }) => (isActive ? "active-tab" : "")}
           >
-            <FaCamera />
+            <div className="Icon-container">
+              <IonIcon icon={Icons.apertureOutline} />
+            </div>
             <span>Insights</span>
           </NavLink>
           <NavLink
             to="/tab3"
             className={({ isActive }) => (isActive ? "active-tab" : "")}
           >
-            <FaEllipsisH />
-            <span>More</span>
+            <div className="Icon-container">
+              <IonIcon icon={Icons.ellipsisHorizontalCircleOutline} />
+            </div>
+            <span>Settings</span>
           </NavLink>
         </div>
       </div>
