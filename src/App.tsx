@@ -15,48 +15,23 @@ import Tab2 from "./pages/Tab2";
 import Tab3 from "./pages/Tab3";
 
 import db from "./db";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { IonIcon } from "@ionic/react";
 import * as Icons from "ionicons/icons";
 function App() {
+  const [isReady, setIsReady] = useState(false);
   useEffect(() => {
-    const fetchCategories = async () => {
-      await db.open();
-      if (db.isOpen()) {
-        const categoriesData = await db.table("categories").toArray();
-        if (categoriesData.length === 0) {
-          try {
-            const ids = await db.table("categories").bulkPut(
-              [
-                {
-                  name: "food",
-                  target_amt: 300,
-                  bkg_color: "#2D3047",
-                  tags: ["Breakfast", "Lunch", "Dinner"],
-                },
-                {
-                  name: "transport",
-                  target_amt: 100,
-                  bkg_color: "#38726C",
-                  tags: ["Bus", "Cab", "train"],
-                },
-                {
-                  name: "leisure",
-                  target_amt: 200,
-                  bkg_color: "#B9314F",
-                  tags: [],
-                },
-              ],
-              { allKeys: true }
-            );
-          } catch (err) {
-            console.log(err);
-          }
-        }
+    async function initializeDatabase() {
+      try {
+        await db.open(); // Wait for the database to open and migrations to complete
+        setIsReady(true); // Set the state to indicate readiness
+      } catch (error) {
+        console.error("Database initialization failed:", error);
       }
-    };
+    }
 
-    fetchCategories();
+    initializeDatabase();
+
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         navigator.serviceWorker.addEventListener("message", (event) => {
@@ -72,6 +47,7 @@ function App() {
     // Customize this function to display a toast notification
     alert(message); // Replace with a better UI, e.g., a toast
   };
+
   if (!isMobileDevice())
     return (
       <div className="mobile-only-container">
@@ -86,7 +62,8 @@ function App() {
       </div>
     );
 
-  type homePath = "/tab1" | "/";
+  if (isReady === false) return <div>Loading...</div>;
+
   return (
     <Router>
       <div className="app background">

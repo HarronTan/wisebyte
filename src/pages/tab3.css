@@ -1,0 +1,25 @@
+.modal-float-container{
+    position: fixed;
+    z-index: 4;
+    height:100vh;
+    width:100vw;
+    top:0;
+    left:0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-container-center{
+    background-color: white;
+    border-radius: 8px;
+    padding:12px;
+}
+
+.primary-button{
+    padding: 4px 12px;
+    background-color: #183A55;
+    border-radius: 8px;
+    text-align: center;
+    color:white;
+}
