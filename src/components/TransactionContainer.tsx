@@ -19,7 +19,7 @@ const TransactionContainer = ({ date }: { date: Date }) => {
   const [catColor, setColor] = useState("");
   const [ops, setOps] = useState("");
   const [input, setInput] = useState("");
-  const [desc, setDesc] = useState("");
+  const [desc, setDesc] = useState<string>("");
   const [displayRec, setDisplayRec] = useState<
     [string, Transactions[]][] | null
   >(null);
@@ -160,6 +160,10 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     setColor("");
     setDesc("");
   };
+
+  function handleDescChange(event: ChangeEvent<HTMLInputElement>) {
+    setDesc(event.target.value);
+  }
 
   const handleSubmit = async () => {
     const date_time = dateField ? dateField : new Date();
@@ -455,229 +459,6 @@ const TransactionContainer = ({ date }: { date: Date }) => {
     return new Intl.DateTimeFormat("en-US", options).format(date);
   };
 
-  function NewTransactionModal() {
-    return (
-      <>
-        <div className="modal-backdrop"></div>
-        <div className="modal-container">
-          <div className="modal-header-custom">
-            <div
-              style={{
-                width: "100%",
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "small",
-                  color: "#808080",
-                  paddingRight: "4px",
-                }}
-              >
-                {formatDateFieldDisplay(dateField ? dateField : new Date())}
-              </div>
-              <div
-                style={{
-                  position: "relative",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <IonIcon icon={Icons.calendar}></IonIcon>
-                <input
-                  type="date"
-                  style={{
-                    width: "20px",
-                    border: "none",
-                    maxHeight: "24px",
-                    opacity: 0,
-                    position: "absolute",
-                    left: 0,
-                  }}
-                  value={formatDateField(dateField ? dateField : new Date())}
-                  onChange={(event) => {
-                    const selectedDate = new Date(event.target.value);
-                    const now = new Date(); // Current date and time
-                    // Set the time of the selected date to the current time
-                    selectedDate.setHours(
-                      now.getHours(),
-                      now.getMinutes(),
-                      now.getSeconds(),
-                      now.getMilliseconds()
-                    );
-                    setDateField(selectedDate);
-                  }}
-                />
-              </div>
-            </div>
-            <h3 style={{ backgroundColor: catColor, margin: 0 }}>
-              {category.replace(
-                category.charAt(0),
-                category.charAt(0).toUpperCase()
-              )}
-            </h3>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "end",
-                width: "100%",
-              }}
-            >
-              <button
-                className="btn-close"
-                onClick={() => {
-                  setIsOpen(false);
-                  clearInputs();
-                }}
-              ></button>
-            </div>
-          </div>
-          <div className="modal-amount">
-            Amount
-            <div
-              style={{
-                fontSize: "3rem",
-                height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                fontStyle: "oblique",
-              }}
-            >
-              ${input}
-            </div>
-            <div style={{ width: "100%", textAlign: "center" }}>
-              <input
-                placeholder="Description..."
-                onChange={(event) => setDesc(event.target.value)}
-                value={desc}
-                className="desc-input"
-              ></input>
-              <div className="modal-desc-tag">
-                {categories
-                  ?.find((cat) => cat.name === category)
-                  ?.tags.map((tag) => (
-                    <div key={tag} className="tag" onClick={() => setDesc(tag)}>
-                      {tag}
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-          <div className="calculator-container">
-            <div className="calculator-row">
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(1)}
-              >
-                1
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(2)}
-              >
-                2
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(3)}
-              >
-                3
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick("backsapce")}
-              >
-                back
-              </div>
-            </div>
-            <div className="calculator-row">
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(4)}
-              >
-                4
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(5)}
-              >
-                5
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(6)}
-              >
-                6
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick("mulDiv")}
-              >
-                &times;/÷
-              </div>
-            </div>
-            <div className="calculator-row">
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(7)}
-              >
-                7
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(8)}
-              >
-                8
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(9)}
-              >
-                9
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick("addMinus")}
-              >
-                +/-
-              </div>
-            </div>
-            <div className="calculator-row">
-              <div className="calculator-btns" onClick={() => handleClear()}>
-                AC
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(0)}
-              >
-                0
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => handleButtonClick(".")}
-              >
-                .
-              </div>
-              <div
-                className="calculator-btns"
-                onClick={() => {
-                  ops === "" ? handleSubmit() : handleButtonClick("=");
-                }}
-                style={{ backgroundColor: catColor, color: "white" }}
-              >
-                {ops === "" ? "Save" : "="}
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <div className="container ">
       {/* Toolbar for Total Expenses */}
@@ -822,7 +603,233 @@ const TransactionContainer = ({ date }: { date: Date }) => {
       )}
 
       {/* Modal for category input (if isOpen is true) */}
-      {isOpen && <NewTransactionModal />}
+      {isOpen && (
+        <>
+          <div className="modal-backdrop"></div>
+          <div className="modal-container">
+            <div className="modal-header-custom">
+              <div
+                style={{
+                  width: "100%",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "small",
+                    color: "#808080",
+                    paddingRight: "4px",
+                  }}
+                >
+                  {formatDateFieldDisplay(dateField ? dateField : new Date())}
+                </div>
+                <div
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <IonIcon icon={Icons.calendar}></IonIcon>
+                  <input
+                    type="date"
+                    style={{
+                      width: "20px",
+                      border: "none",
+                      maxHeight: "24px",
+                      opacity: 0,
+                      position: "absolute",
+                      left: 0,
+                    }}
+                    value={formatDateField(dateField ? dateField : new Date())}
+                    onChange={(event) => {
+                      const selectedDate = new Date(event.target.value);
+                      const now = new Date(); // Current date and time
+                      // Set the time of the selected date to the current time
+                      selectedDate.setHours(
+                        now.getHours(),
+                        now.getMinutes(),
+                        now.getSeconds(),
+                        now.getMilliseconds()
+                      );
+                      setDateField(selectedDate);
+                    }}
+                  />
+                </div>
+              </div>
+              <h3 style={{ backgroundColor: catColor, margin: 0 }}>
+                {category.replace(
+                  category.charAt(0),
+                  category.charAt(0).toUpperCase()
+                )}
+              </h3>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "end",
+                  width: "100%",
+                }}
+              >
+                <button
+                  className="btn-close"
+                  onClick={() => {
+                    setIsOpen(false);
+                    clearInputs();
+                  }}
+                ></button>
+              </div>
+            </div>
+            <div className="modal-amount">
+              Amount
+              <div
+                style={{
+                  fontSize: "3rem",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  fontStyle: "oblique",
+                }}
+              >
+                ${input}
+              </div>
+              <div style={{ width: "100%", textAlign: "center" }}>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Description..."
+                    onChange={handleDescChange}
+                    value={desc}
+                    className="desc-input"
+                  />
+                </div>
+                <div className="modal-desc-tag">
+                  {categories
+                    ?.find((cat) => cat.name === category)
+                    ?.tags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="tag"
+                        onClick={() => setDesc(tag)}
+                      >
+                        {tag}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+            <div className="calculator-container">
+              <div className="calculator-row">
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(1)}
+                >
+                  1
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(2)}
+                >
+                  2
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(3)}
+                >
+                  3
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick("backsapce")}
+                >
+                  back
+                </div>
+              </div>
+              <div className="calculator-row">
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(4)}
+                >
+                  4
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(5)}
+                >
+                  5
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(6)}
+                >
+                  6
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick("mulDiv")}
+                >
+                  &times;/÷
+                </div>
+              </div>
+              <div className="calculator-row">
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(7)}
+                >
+                  7
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(8)}
+                >
+                  8
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(9)}
+                >
+                  9
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick("addMinus")}
+                >
+                  +/-
+                </div>
+              </div>
+              <div className="calculator-row">
+                <div className="calculator-btns" onClick={() => handleClear()}>
+                  AC
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(0)}
+                >
+                  0
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => handleButtonClick(".")}
+                >
+                  .
+                </div>
+                <div
+                  className="calculator-btns"
+                  onClick={() => {
+                    ops === "" ? handleSubmit() : handleButtonClick("=");
+                  }}
+                  style={{ backgroundColor: catColor, color: "white" }}
+                >
+                  {ops === "" ? "Save" : "="}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {isEditModalOpen && editingRec != null ? (
         <EditModal rec={editingRec} />
