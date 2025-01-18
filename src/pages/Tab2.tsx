@@ -181,11 +181,25 @@ const Tab2 = () => {
                   maintainAspectRatio: true,
                   responsive: true,
                   animation: {
-                    duration: 100,
+                    duration: 50,
                   },
                   plugins: {
                     tooltip: {
-                      animation: { duration: 50, easing: "easeInOutQuart" }, // Disable tooltip animation
+                      animation: false,
+                      callbacks: {
+                        title: (context) => {
+                          if (context[0] && context[0].label) {
+                            return `Category:`;
+                          }
+                        },
+                        label: (context) => {
+                          const label = context.label || ""; // Retrieve the label (category name)
+                          const value = context.raw || 0; // Retrieve the value
+                          return ` ${
+                            label.charAt(0).toUpperCase() + label.slice(1)
+                          }: $${value}`; // Customize label format
+                        },
+                      },
                     },
                     datalabels: {
                       color: "#D6F4FF", // Label color
@@ -205,6 +219,16 @@ const Tab2 = () => {
                 }}
               />
             </div>
+
+            {/* <div
+              style={{
+                marginTop: "16px",
+                background: "#FFE1D6",
+                width: "100%",
+                borderRadius: "16px",
+                padding: "8px",
+              }}
+            ></div> */}
           </div>
         )}
       </div>
