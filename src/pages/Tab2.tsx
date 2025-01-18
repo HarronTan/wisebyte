@@ -173,10 +173,7 @@ const Tab2 = () => {
 
         {/* Content below the date selector */}
         {chartData && (
-          <div
-            className="row justify-content-center expenses-container"
-            style={{ aspectRatio: 1 / 1 }}
-          >
+          <div className="justify-content-center expenses-container">
             <div>
               <Pie
                 data={chartData}
